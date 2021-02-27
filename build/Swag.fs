@@ -1,0 +1,3 @@
+﻿module Swag
+
+let logo = ""
