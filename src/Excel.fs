@@ -152,8 +152,45 @@ type FieldMap<'T> =
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
+        member self.hyperlink(link: 'T -> Uri) =
+            let transformer (row: 'T) (cell: IXLCell) =
+                cell.Hyperlink <- XLHyperlink(link row)
+                cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.hyperlink(link: 'T -> XLHyperlink) =
+            let transformer (row: 'T) (cell: IXLCell) =
+                cell.Hyperlink <- link row
+                cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.horizontalAlignment(alignment: XLAlignmentHorizontalValues) = 
+            let transformer (row: 'T) (cell: IXLCell) =
+                cell.Style.Alignment.Horizontal <- alignment
+                cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.verticalAlignment(alignment: XLAlignmentVerticalValues) = 
+            let transformer (row: 'T) (cell: IXLCell) =
+                cell.Style.Alignment.Vertical <- alignment
+                cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.headerHorizontalAlignment(alignment: XLAlignmentHorizontalValues) = 
+            let transformer (cell: IXLCell) =
+                cell.Style.Alignment.Horizontal <- alignment
+                cell
+            { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
+
+        member self.headerVerticalAlignment(alignment: XLAlignmentVerticalValues) = 
+            let transformer (cell: IXLCell) =
+                cell.Style.Alignment.Vertical <- alignment
+                cell
+            { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
+
         member self.transformCell(transform: 'T -> IXLCell -> IXLCell) =
             { self with CellTransformers = List.append self.CellTransformers [transform] }
+
 
 type Excel() =
     static member field<'T>(map: 'T -> int) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
@@ -170,6 +207,57 @@ type Excel() =
         | None -> cell.SetValue(null)
         | Some text -> cell.SetValue(text)
     )
+
+    static member field<'T>(map: 'T -> DateTimeOffset) = FieldMap<'T>.create(fun row cell -> 
+        let value = map row
+        cell.SetValue(value.UtcDateTime)
+    )
+
+    static member field<'T>(map: 'T -> DateTimeOffset option) = FieldMap<'T>.create(fun row cell -> 
+        match map row with 
+        | None -> cell.SetValue(null)
+        | Some value -> cell.SetValue(value.UtcDateTime) 
+    )
+
+    static member field<'T>(map: 'T -> Uri) = FieldMap<'T>.create(fun row cell ->
+        let uri = map row
+        cell.Hyperlink <- XLHyperlink(uri)
+        cell.SetValue(uri.ToString())
+    )
+
+    static member field<'T>(map: 'T -> decimal) = FieldMap<'T>.create(fun row cell -> 
+        let value = Convert.ToDouble(map row)
+        cell.SetValue(value)
+    )
+
+    static member field<'T>(map: 'T -> decimal option) = FieldMap<'T>.create(fun row cell -> 
+        match map row with 
+        | None -> cell.SetValue(null)
+        | Some value -> cell.SetValue(Convert.ToDouble(value))
+    )
+
+    static member field<'T>(map: 'T -> int64) = FieldMap<'T>.create(fun row cell -> 
+        let value = Convert.ToDouble(map row)
+        cell.SetValue(value)
+    )
+
+    static member field<'T>(map: 'T -> int64 option) = FieldMap<'T>.create(fun row cell -> 
+        match map row with 
+        | None -> cell.SetValue(null)
+        | Some value -> cell.SetValue(Convert.ToDouble(value))
+    )
+
+    static member field<'T>(map: 'T -> Guid) = FieldMap<'T>.create(fun row cell -> 
+        let value = map row
+        cell.SetValue(value.ToString())
+    )
+
+    static member field<'T>(map: 'T -> Guid option) = FieldMap<'T>.create(fun row cell -> 
+        match map row with 
+        | None -> cell.SetValue(null)
+        | Some value -> cell.SetValue(value.ToString())
+    )
+
     static member populate<'T>(sheet: IXLWorksheet, data: seq<'T>, fields: FieldMap<'T> list) : unit =
         let headerTransformerGroups = fields |> List.map (fun field -> field.HeaderTransformers)
         let noHeadersAvailable =

@@ -167,3 +167,24 @@ let multipleSheets() : byte[] =
 
 System.IO.File.WriteAllBytes("MultipleSheets.xlsx", multipleSheets())
 ```
+
+### Using hyperlinks
+```fs
+type Website = { name: string; address: string }
+
+let websites = [
+    { name = "Github"; address = "https://www.github.com" }
+]
+
+let excelFile = Excel.createFrom(websites, [
+    // named link
+    Excel.field(fun website -> website.name)
+        .hyperlink(fun website -> Uri(website.address))
+
+    // full link
+    Excel.field(fun website -> Uri(website.address))
+])
+
+System.IO.File.WriteAllBytes("Websites.xlsx", excelFile)
+```
+![png](docs/using-hyperlinks.png)

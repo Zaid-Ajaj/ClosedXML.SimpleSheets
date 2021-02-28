@@ -2,6 +2,7 @@
 open ClosedXML.Excel
 open ClosedXML.SimpleSheets
 open System.IO
+open System
 
 type User = { Name: string; Age: int; Active: bool }
 
@@ -10,6 +11,11 @@ let users = [
     { Name = "Jane"; Age = 26; Active = false }
     { Name = "John"; Age = 25; Active = false }
 ]
+
+type Website = {
+    name: string
+    address: string
+}
 
 let createFullExample() : byte[] =
     use workbook = new XLWorkbook()
@@ -46,6 +52,19 @@ let createFullExample() : byte[] =
                 then XLColor.Green
                 else XLColor.Red
             )
+    ])
+
+    let sheetWithLinks = workbook.AddWorksheet("Adding Links")
+
+    let websites = [
+        { name = "Github"; address = "https://www.github.com" }
+    ]
+
+    Excel.populate(sheetWithLinks, websites, [
+        Excel.field(fun website -> website.name)
+            .hyperlink(fun website -> Uri(website.address))
+
+        Excel.field(fun website -> Uri(website.address))
     ])
 
     Excel.createFrom(workbook)
