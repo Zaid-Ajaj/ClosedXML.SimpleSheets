@@ -142,8 +142,10 @@ type FieldMap<'T> =
 
         member self.dateFormat(format: string) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Style.DateFormat.Format <- format
+                cell.DataType <- XLDataType.DateTime
+                cell.Style.DateFormat.Format <- format 
                 cell
+
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
         member self.numberFormat(format: string) =
@@ -158,10 +160,32 @@ type FieldMap<'T> =
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
+        member self.hyperlink(link: 'T -> Uri option) =
+            let transformer (row: 'T) (cell: IXLCell) =
+                match link row with 
+                | Some uri -> 
+                    cell.Hyperlink <- XLHyperlink(uri)
+                    cell
+                | None -> 
+                    cell
+
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
         member self.hyperlink(link: 'T -> XLHyperlink) =
             let transformer (row: 'T) (cell: IXLCell) =
                 cell.Hyperlink <- link row
                 cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.hyperlink(link: 'T -> XLHyperlink option) =
+            let transformer (row: 'T) (cell: IXLCell) =
+                match link row with 
+                | Some hyperlink -> 
+                    cell.Hyperlink <- hyperlink
+                    cell
+                | None -> 
+                    cell
+
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
         member self.horizontalAlignment(alignment: XLAlignmentHorizontalValues) = 
@@ -191,7 +215,6 @@ type FieldMap<'T> =
         member self.transformCell(transform: 'T -> IXLCell -> IXLCell) =
             { self with CellTransformers = List.append self.CellTransformers [transform] }
 
-
 type Excel() =
     static member field<'T>(map: 'T -> int) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
     static member field<'T>(map: 'T -> string) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
@@ -204,7 +227,7 @@ type Excel() =
     static member field<'T>(map: 'T -> double option) = FieldMap<'T>.create(fun row cell -> cell.SetValue(Option.toNullable (map row)))
     static member field<'T>(map: 'T -> string option) = FieldMap<'T>.create(fun row cell ->
         match map row with
-        | None -> cell.SetValue(null)
+        | None -> cell
         | Some text -> cell.SetValue(text)
     )
 
@@ -215,7 +238,7 @@ type Excel() =
 
     static member field<'T>(map: 'T -> DateTimeOffset option) = FieldMap<'T>.create(fun row cell -> 
         match map row with 
-        | None -> cell.SetValue(null)
+        | None -> cell
         | Some value -> cell.SetValue(value.UtcDateTime) 
     )
 
@@ -225,6 +248,15 @@ type Excel() =
         cell.SetValue(uri.ToString())
     )
 
+    static member field<'T>(map: 'T -> Uri option) = FieldMap<'T>.create(fun row cell ->
+        match map row with 
+        | Some uri -> 
+            cell.Hyperlink <- XLHyperlink(uri)
+            cell.SetValue(uri.ToString())
+        | None -> 
+            cell
+    )
+
     static member field<'T>(map: 'T -> decimal) = FieldMap<'T>.create(fun row cell -> 
         let value = Convert.ToDouble(map row)
         cell.SetValue(value)
@@ -232,7 +264,7 @@ type Excel() =
 
     static member field<'T>(map: 'T -> decimal option) = FieldMap<'T>.create(fun row cell -> 
         match map row with 
-        | None -> cell.SetValue(null)
+        | None -> cell
         | Some value -> cell.SetValue(Convert.ToDouble(value))
     )
 
@@ -243,7 +275,7 @@ type Excel() =
 
     static member field<'T>(map: 'T -> int64 option) = FieldMap<'T>.create(fun row cell -> 
         match map row with 
-        | None -> cell.SetValue(null)
+        | None -> cell
         | Some value -> cell.SetValue(Convert.ToDouble(value))
     )
 
@@ -254,7 +286,7 @@ type Excel() =
 
     static member field<'T>(map: 'T -> Guid option) = FieldMap<'T>.create(fun row cell -> 
         match map row with 
-        | None -> cell.SetValue(null)
+        | None -> cell
         | Some value -> cell.SetValue(value.ToString())
     )
 

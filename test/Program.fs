@@ -4,12 +4,19 @@ open ClosedXML.SimpleSheets
 open System.IO
 open System
 
-type User = { Name: string; Age: int; Active: bool }
+type User = { 
+    Name: string; 
+    Age: int; 
+    Working: bool;
+    LastName: string option
+    DateOfBirth : DateTime
+    StartedJob : DateTime option
+}
 
 let users = [
-    { Name = "Zaid"; Age = 24; Active = true }
-    { Name = "Jane"; Age = 26; Active = false }
-    { Name = "John"; Age = 25; Active = false }
+    { Name = "Zaid"; Age = 24; Working = true; LastName = Some "Ajaj"; DateOfBirth = DateTime(1996, 11, 13); StartedJob = None }
+    { Name = "Jane"; Age = 26; Working = true; LastName = Some "Doe"; DateOfBirth = DateTime(2020, 01, 01); StartedJob = None }
+    { Name = "John"; Age = 25; Working = false; LastName = None; DateOfBirth = DateTime(2020, 01, 01); StartedJob = Some(DateTime(2020, 01, 01)) }
 ]
 
 type Website = {
@@ -23,35 +30,46 @@ let createFullExample() : byte[] =
     Excel.populate(simpleFields, users, [
         Excel.field(fun user -> user.Name)
         Excel.field(fun user -> user.Age)
-        Excel.field(fun user -> user.Active)
+        Excel.field(fun user -> user.Working)
+        Excel.field(fun user -> user.LastName)
+        Excel.field(fun user -> user.DateOfBirth)
+        Excel.field(fun user -> user.StartedJob)
     ])
 
     let fieldsWithHeaders = workbook.AddWorksheet("Added Headers")
     Excel.populate(fieldsWithHeaders, users, [
         Excel.field(fun user -> user.Name).header("Name")
         Excel.field(fun user -> user.Age).header("Age")
-        Excel.field(fun user -> user.Active).header("Active")
+        Excel.field(fun user -> user.Working).header("Working")
     ])
 
     let styledRows = workbook.AddWorksheet("Styled Rows")
     Excel.populate(styledRows, users, [
         Excel.field(fun user -> user.Name)
             .header("Name")
-            .strikethrough(fun user -> not user.Active)
+            .strikethrough(fun user -> not user.Working)
 
         Excel.field(fun user -> user.Age)
             .header("Age")
             .headerFontColor(XLColor.White)
             .headerBackgroundColor(XLColor.DarkCyan)
 
-        Excel.field(fun user -> user.Active)
-            .header("Active")
+        Excel.field(fun user -> user.Working)
+            .header("Working")
+            .headerFontColor(XLColor.White)
+            .headerBackgroundColor(XLColor.DarkCyan)
             .fontColor(XLColor.White)
             .backgroundColor(fun user ->
-                if user.Active
+                if user.Working
                 then XLColor.Green
                 else XLColor.Red
             )
+
+        Excel.field(fun user -> user.DateOfBirth)
+            .header("DateOfBirth")
+            .headerFontColor(XLColor.White)
+            .headerBackgroundColor(XLColor.DarkCyan)
+            .dateFormat("dd/mm/yyyy")
     ])
 
     let sheetWithLinks = workbook.AddWorksheet("Adding Links")
