@@ -3,9 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ClosedXML.FSharp", "src\ClosedXML.SimpleSheets.fsproj", "{870DDBE1-2F97-4945-B82D-F10735D9A10F}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ClosedXML.SimpleSheets", "src\ClosedXML.SimpleSheets.fsproj", "{870DDBE1-2F97-4945-B82D-F10735D9A10F}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ClosedXML.FSharp.Console", "test\Test.fsproj", "{22598727-A2F1-4821-9E94-336340F93AB3}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Test", "test\Test.fsproj", "{22598727-A2F1-4821-9E94-336340F93AB3}"
+EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Build", "build\Build.fsproj", "{AAB559B3-5A49-43DB-A122-B5D789350978}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3EB937FF-87F2-4CB5-9337-24E8EF763C55}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENCE = LICENCE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +50,18 @@ Global
 		{22598727-A2F1-4821-9E94-336340F93AB3}.Release|x64.Build.0 = Release|Any CPU
 		{22598727-A2F1-4821-9E94-336340F93AB3}.Release|x86.ActiveCfg = Release|Any CPU
 		{22598727-A2F1-4821-9E94-336340F93AB3}.Release|x86.Build.0 = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|x64.Build.0 = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Debug|x86.Build.0 = Debug|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|x64.ActiveCfg = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|x64.Build.0 = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|x86.ActiveCfg = Release|Any CPU
+		{AAB559B3-5A49-43DB-A122-B5D789350978}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
