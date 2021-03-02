@@ -38,8 +38,8 @@ type RowWithImage = {
 
 let rnd = System.Random()
 
-type Charts() = 
-    static member line(data: float seq) = 
+type Charts() =
+    static member line(data: float seq) =
         let chart = LineChart()
         chart.Entries <- [
             for i in data -> ChartEntry(float32(i))
@@ -52,10 +52,10 @@ type Charts() =
         chart.MaxValue <- 100.0f
         chart
 
-    static member bar(data: float seq) = 
+    static member bar(data: float seq) =
         let chart = BarChart()
         chart.Entries <- [
-            for i in data do 
+            for i in data do
                 let entry = ChartEntry(float32(i))
                 entry
         ]
@@ -65,7 +65,7 @@ type Charts() =
         chart.MaxValue <- 100.0f
         chart
 
-    static member createImage(chart: Chart, width:int, height:int) = 
+    static member createImage(chart: Chart, width:int, height:int) =
         use bitmap = new SkiaSharp.SKBitmap(width, height)
         use canvas = new SkiaSharp.SKCanvas(bitmap)
         chart.DrawContent(canvas, width, height)
@@ -77,7 +77,7 @@ type Charts() =
         memoryStream.ToArray()
 
 let rowWithImages = [
-    { 
+    {
         title =  "Line chart"
         data = [ for i in 1 .. 12 -> rnd.NextDouble() * 100.0 ]
         chart = ChartType.LineChart
@@ -152,19 +152,18 @@ let createFullExample() : byte[] =
         Excel.field(fun website -> Uri(website.address))
     ])
 
-    use workbook = new XLWorkbook()
     let imageSheet = workbook.AddWorksheet("Images")
     Excel.populate(imageSheet, rowWithImages, [
         Excel.field(fun row -> row.title)
-             .header("Title")
-             .headerHorizontalAlignment(XLAlignmentHorizontalValues.Center)
-             .verticalAlignment(XLAlignmentVerticalValues.Center)
-             .horizontalAlignment(XLAlignmentHorizontalValues.Center)
-             .columnWidth(15)
+            .header("Title")
+            .headerHorizontalAlignment(XLAlignmentHorizontalValues.Center)
+            .verticalAlignment(XLAlignmentVerticalValues.Center)
+            .horizontalAlignment(XLAlignmentHorizontalValues.Center)
+            .columnWidth(15)
 
-        Excel.field(fun row -> 
-            match row.chart with 
-            | ChartType.BarChart -> 
+        Excel.field(fun row ->
+            match row.chart with
+            | ChartType.BarChart ->
                 let barChart = Charts.bar(row.data)
                 let chartBytes = Charts.createImage(chart=barChart, width=500, height=500)
                 XLImage(chartBytes, XLPictureFormat.Png)
