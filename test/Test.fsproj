@@ -10,6 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microcharts" Version="0.9.5.9" />
     <ProjectReference Include="..\src\ClosedXML.SimpleSheets.fsproj" />
     <PackageReference Update="FSharp.Core" Version="4.7.2" />
   </ItemGroup>

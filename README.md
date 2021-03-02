@@ -188,3 +188,48 @@ let excelFile = Excel.createFrom(websites, [
 System.IO.File.WriteAllBytes("Websites.xlsx", excelFile)
 ```
 ![png](docs/using-hyperlinks.png)
+
+### Header and Cell alignments
+```fs
+open ClosedXML
+open ClosedXML.Excel
+open ClosedXML.SimpleSheets
+
+type User = { Name: string; Age: int }
+
+let users = [
+    { Name = "Jane"; Age = 26 }
+    { Name = "John"; Age = 25 }
+]
+
+let excelFile = Excel.createFrom(users, [
+    Excel.field(fun user -> user.Name)
+        .header("Name")
+        // header name is centered, horizontally
+        .headerHorizontalAlignment(XLAlignmentHorizontalValues.Center)
+        // cell values are centered, both in vertical and horizontal direction
+        .verticalAlignment(XLAlignmentVerticalValues.Center)
+        .horizontalAlignment(XLAlignmentHorizontalValues.Center)
+])
+
+System.File.IO.WriteAllBytes("Alignments.xlsx", excelFile)
+```
+### Working with Images
+You can map fields into images using the `XLImage` type which can be constructed using the contents of an image as `byte[]` and its format:
+```fs
+open ClosedXML.SimpleSheets
+open ClosedXML.Excel.Drawings
+
+Excel.field(fun user -> XLImage(user.profileImageBytes, XLPictureFormat.Png))
+```
+The image added to the workbook will be resized to the size of the cell to which it was added. You can play with the column width and row height to make the images more visible:
+```fs
+open ClosedXML.SimpleSheets
+open ClosedXML.Excel.Drawings
+
+Excel.field(fun user -> XLImage(user.profileImageBytes, XLPictureFormat.Png))
+     .columnWidth(40)
+     .rowHeight(50)
+```
+Bonus points if you are using a charting library that can export the charts as image bytes. See the project in  `./test` where we generate charts for row data and generate images from them using the [Microcharts](https://github.com/dotnet-ad/Microcharts) library. You can use other charting libraries as well if they are able to export charts as `byte[]`:
+![png](docs/charts-as-images.png)

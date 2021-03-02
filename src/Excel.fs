@@ -1,17 +1,35 @@
 ﻿namespace ClosedXML.SimpleSheets
 
-open ClosedXML
-open ClosedXML.Excel
 open System
 open System.IO
+
+open ClosedXML
+open ClosedXML.Excel
+open ClosedXML.Excel.Drawings
+
+type XLImage(content: byte[], format: XLPictureFormat) = 
+    member self.content = content
+    member self.format = format 
+
+    new (content: byte[]) = XLImage(content, XLPictureFormat.Png)
 
 type FieldMap<'T> =
     {
         CellTransformers : ('T -> IXLCell -> IXLCell) list
         HeaderTransformers : (IXLCell -> IXLCell) list
+        ColumnWidth : float option
+        RowHeight : ('T -> float option) option
+        AdjustToContents: bool
     }
     with
-        static member empty<'T>() = { CellTransformers = []; HeaderTransformers = [] }
+        static member empty<'T>() = { 
+            CellTransformers = []
+            HeaderTransformers = []
+            ColumnWidth = None
+            RowHeight = None
+            AdjustToContents = false
+        }
+
         static member create<'T>(mapRow: 'T -> IXLCell -> IXLCell) =
             let empty = FieldMap<'T>.empty()
             { empty with CellTransformers = List.append empty.CellTransformers [mapRow] }
@@ -211,6 +229,30 @@ type FieldMap<'T> =
                 cell.Style.Alignment.Vertical <- alignment
                 cell
             { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
+        
+        member self.columnWidth(width: float) = 
+            { self with ColumnWidth = Some width }
+
+        member self.columnWidth(width: int) = 
+            { self with ColumnWidth = Some (float width) }
+        
+        member self.columnWidth(width: float option) = 
+            { self with ColumnWidth = width }
+
+        member self.rowHeight(height: int) = 
+            { self with RowHeight = Some(fun row -> Some (float height)) }
+
+        member self.rowHeight(height: float) = 
+            { self with RowHeight = Some(fun row -> Some height) }
+
+        member self.rowHeight(height: float option) = 
+            { self with RowHeight = Some(fun row -> height) }
+
+        member self.rowHeight(height: 'T -> float option) = 
+            { self with RowHeight = Some(fun row -> height row) }
+
+        member self.adjustToContents() = 
+            { self with AdjustToContents = true }
 
         member self.transformCell(transform: 'T -> IXLCell -> IXLCell) =
             { self with CellTransformers = List.append self.CellTransformers [transform] }
@@ -290,6 +332,27 @@ type Excel() =
         | Some value -> cell.SetValue(value.ToString())
     )
 
+    static member field<'T>(map: 'T -> XLImage) = FieldMap<'T>.create(fun row cell -> 
+        let image = map row
+        let worksheet = cell.Worksheet
+        let addedImage = worksheet.AddPicture(new MemoryStream(image.content), image.format)
+        addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore 
+        addedImage.Placement <- XLPicturePlacement.MoveAndSize
+        cell
+    )
+
+    static member field<'T>(map: 'T -> XLImage option) = FieldMap<'T>.create(fun row cell -> 
+        match map row with
+        | Some image -> 
+            let worksheet = cell.Worksheet
+            let addedImage = worksheet.AddPicture(new MemoryStream(image.content), image.format)
+            addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore 
+            addedImage.Placement <- XLPicturePlacement.MoveAndSize
+            cell
+        | None -> 
+            cell
+    )
+
     static member populate<'T>(sheet: IXLWorksheet, data: seq<'T>, fields: FieldMap<'T> list) : unit =
         let headerTransformerGroups = fields |> List.map (fun field -> field.HeaderTransformers)
         let noHeadersAvailable =
@@ -311,6 +374,27 @@ type Excel() =
                 let activeCell = activeRow.Cell(fieldIndex + 1)
                 for transformer in field.CellTransformers do
                     ignore (transformer row activeCell)
+
+                if field.AdjustToContents then
+                    let currentColumn = activeCell.WorksheetColumn()
+                    currentColumn.AdjustToContents() |> ignore
+                    activeRow.AdjustToContents() |> ignore
+
+                match field.ColumnWidth with
+                | Some givenWidth -> 
+                    let currentColumn = activeCell.WorksheetColumn()
+                    currentColumn.Width <- givenWidth
+                | None -> ()
+
+                match field.RowHeight with 
+                | Some givenHeightFn -> 
+                    match givenHeightFn row with
+                    | Some givenHeight -> 
+                        activeRow.Height <- givenHeight
+                    | None -> 
+                        ()
+                | None -> 
+                    ()
 
     static member workbookToBytes(workbook: XLWorkbook) =
         use memoryStream = new MemoryStream()
