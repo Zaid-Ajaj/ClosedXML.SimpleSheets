@@ -7,9 +7,9 @@ open ClosedXML
 open ClosedXML.Excel
 open ClosedXML.Excel.Drawings
 
-type XLImage(content: byte[], format: XLPictureFormat) = 
+type XLImage(content: byte[], format: XLPictureFormat) =
     member self.content = content
-    member self.format = format 
+    member self.format = format
 
     new (content: byte[]) = XLImage(content, XLPictureFormat.Png)
 
@@ -22,7 +22,7 @@ type FieldMap<'T> =
         AdjustToContents: bool
     }
     with
-        static member empty<'T>() = { 
+        static member empty<'T>() = {
             CellTransformers = []
             HeaderTransformers = []
             ColumnWidth = None
@@ -161,7 +161,7 @@ type FieldMap<'T> =
         member self.dateFormat(format: string) =
             let transformer (row: 'T) (cell: IXLCell) =
                 cell.DataType <- XLDataType.DateTime
-                cell.Style.DateFormat.Format <- format 
+                cell.Style.DateFormat.Format <- format
                 cell
 
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
@@ -180,11 +180,11 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> Uri option) =
             let transformer (row: 'T) (cell: IXLCell) =
-                match link row with 
-                | Some uri -> 
+                match link row with
+                | Some uri ->
                     cell.Hyperlink <- XLHyperlink(uri)
                     cell
-                | None -> 
+                | None ->
                     cell
 
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
@@ -197,61 +197,75 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> XLHyperlink option) =
             let transformer (row: 'T) (cell: IXLCell) =
-                match link row with 
-                | Some hyperlink -> 
+                match link row with
+                | Some hyperlink ->
                     cell.Hyperlink <- hyperlink
                     cell
-                | None -> 
+                | None ->
                     cell
 
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
-        member self.horizontalAlignment(alignment: XLAlignmentHorizontalValues) = 
+        member self.horizontalAlignment(alignment: XLAlignmentHorizontalValues) =
             let transformer (row: 'T) (cell: IXLCell) =
                 cell.Style.Alignment.Horizontal <- alignment
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
-        member self.verticalAlignment(alignment: XLAlignmentVerticalValues) = 
+        member self.verticalAlignment(alignment: XLAlignmentVerticalValues) =
             let transformer (row: 'T) (cell: IXLCell) =
                 cell.Style.Alignment.Vertical <- alignment
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
-        member self.headerHorizontalAlignment(alignment: XLAlignmentHorizontalValues) = 
+        member self.centered() =
+            let transformer (row: 'T) (cell: IXLCell) =
+                cell.Style.Alignment.Vertical <- XLAlignmentVerticalValues.Center
+                cell.Style.Alignment.Horizontal <- XLAlignmentHorizontalValues.Center
+                cell
+            { self with CellTransformers = List.append self.CellTransformers [transformer] }
+
+        member self.headerHorizontalAlignment(alignment: XLAlignmentHorizontalValues) =
             let transformer (cell: IXLCell) =
                 cell.Style.Alignment.Horizontal <- alignment
                 cell
             { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
 
-        member self.headerVerticalAlignment(alignment: XLAlignmentVerticalValues) = 
+        member self.headerVerticalAlignment(alignment: XLAlignmentVerticalValues) =
             let transformer (cell: IXLCell) =
                 cell.Style.Alignment.Vertical <- alignment
                 cell
             { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
-        
-        member self.columnWidth(width: float) = 
+
+        member self.headerCentered() =
+            let transformer (cell: IXLCell) =
+                cell.Style.Alignment.Vertical <- XLAlignmentVerticalValues.Center
+                cell.Style.Alignment.Horizontal <- XLAlignmentHorizontalValues.Center
+                cell
+            { self with HeaderTransformers = List.append self.HeaderTransformers [transformer] }
+
+        member self.columnWidth(width: float) =
             { self with ColumnWidth = Some width }
 
-        member self.columnWidth(width: int) = 
+        member self.columnWidth(width: int) =
             { self with ColumnWidth = Some (float width) }
-        
-        member self.columnWidth(width: float option) = 
+
+        member self.columnWidth(width: float option) =
             { self with ColumnWidth = width }
 
-        member self.rowHeight(height: int) = 
+        member self.rowHeight(height: int) =
             { self with RowHeight = Some(fun row -> Some (float height)) }
 
-        member self.rowHeight(height: float) = 
+        member self.rowHeight(height: float) =
             { self with RowHeight = Some(fun row -> Some height) }
 
-        member self.rowHeight(height: float option) = 
+        member self.rowHeight(height: float option) =
             { self with RowHeight = Some(fun row -> height) }
 
-        member self.rowHeight(height: 'T -> float option) = 
+        member self.rowHeight(height: 'T -> float option) =
             { self with RowHeight = Some(fun row -> height row) }
 
-        member self.adjustToContents() = 
+        member self.adjustToContents() =
             { self with AdjustToContents = true }
 
         member self.transformCell(transform: 'T -> IXLCell -> IXLCell) =
@@ -273,15 +287,15 @@ type Excel() =
         | Some text -> cell.SetValue(text)
     )
 
-    static member field<'T>(map: 'T -> DateTimeOffset) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> DateTimeOffset) = FieldMap<'T>.create(fun row cell ->
         let value = map row
         cell.SetValue(value.UtcDateTime)
     )
 
-    static member field<'T>(map: 'T -> DateTimeOffset option) = FieldMap<'T>.create(fun row cell -> 
-        match map row with 
+    static member field<'T>(map: 'T -> DateTimeOffset option) = FieldMap<'T>.create(fun row cell ->
+        match map row with
         | None -> cell
-        | Some value -> cell.SetValue(value.UtcDateTime) 
+        | Some value -> cell.SetValue(value.UtcDateTime)
     )
 
     static member field<'T>(map: 'T -> Uri) = FieldMap<'T>.create(fun row cell ->
@@ -291,65 +305,65 @@ type Excel() =
     )
 
     static member field<'T>(map: 'T -> Uri option) = FieldMap<'T>.create(fun row cell ->
-        match map row with 
-        | Some uri -> 
+        match map row with
+        | Some uri ->
             cell.Hyperlink <- XLHyperlink(uri)
             cell.SetValue(uri.ToString())
-        | None -> 
+        | None ->
             cell
     )
 
-    static member field<'T>(map: 'T -> decimal) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> decimal) = FieldMap<'T>.create(fun row cell ->
         let value = Convert.ToDouble(map row)
         cell.SetValue(value)
     )
 
-    static member field<'T>(map: 'T -> decimal option) = FieldMap<'T>.create(fun row cell -> 
-        match map row with 
+    static member field<'T>(map: 'T -> decimal option) = FieldMap<'T>.create(fun row cell ->
+        match map row with
         | None -> cell
         | Some value -> cell.SetValue(Convert.ToDouble(value))
     )
 
-    static member field<'T>(map: 'T -> int64) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> int64) = FieldMap<'T>.create(fun row cell ->
         let value = Convert.ToDouble(map row)
         cell.SetValue(value)
     )
 
-    static member field<'T>(map: 'T -> int64 option) = FieldMap<'T>.create(fun row cell -> 
-        match map row with 
+    static member field<'T>(map: 'T -> int64 option) = FieldMap<'T>.create(fun row cell ->
+        match map row with
         | None -> cell
         | Some value -> cell.SetValue(Convert.ToDouble(value))
     )
 
-    static member field<'T>(map: 'T -> Guid) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> Guid) = FieldMap<'T>.create(fun row cell ->
         let value = map row
         cell.SetValue(value.ToString())
     )
 
-    static member field<'T>(map: 'T -> Guid option) = FieldMap<'T>.create(fun row cell -> 
-        match map row with 
+    static member field<'T>(map: 'T -> Guid option) = FieldMap<'T>.create(fun row cell ->
+        match map row with
         | None -> cell
         | Some value -> cell.SetValue(value.ToString())
     )
 
-    static member field<'T>(map: 'T -> XLImage) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> XLImage) = FieldMap<'T>.create(fun row cell ->
         let image = map row
         let worksheet = cell.Worksheet
         let addedImage = worksheet.AddPicture(new MemoryStream(image.content), image.format)
-        addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore 
+        addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore
         addedImage.Placement <- XLPicturePlacement.MoveAndSize
         cell
     )
 
-    static member field<'T>(map: 'T -> XLImage option) = FieldMap<'T>.create(fun row cell -> 
+    static member field<'T>(map: 'T -> XLImage option) = FieldMap<'T>.create(fun row cell ->
         match map row with
-        | Some image -> 
+        | Some image ->
             let worksheet = cell.Worksheet
             let addedImage = worksheet.AddPicture(new MemoryStream(image.content), image.format)
-            addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore 
+            addedImage.MoveTo(cell, cell.CellBelow().CellRight()) |> ignore
             addedImage.Placement <- XLPicturePlacement.MoveAndSize
             cell
-        | None -> 
+        | None ->
             cell
     )
 
@@ -381,19 +395,19 @@ type Excel() =
                     activeRow.AdjustToContents() |> ignore
 
                 match field.ColumnWidth with
-                | Some givenWidth -> 
+                | Some givenWidth ->
                     let currentColumn = activeCell.WorksheetColumn()
                     currentColumn.Width <- givenWidth
                 | None -> ()
 
-                match field.RowHeight with 
-                | Some givenHeightFn -> 
+                match field.RowHeight with
+                | Some givenHeightFn ->
                     match givenHeightFn row with
-                    | Some givenHeight -> 
+                    | Some givenHeight ->
                         activeRow.Height <- givenHeight
-                    | None -> 
+                    | None ->
                         ()
-                | None -> 
+                | None ->
                     ()
 
     static member workbookToBytes(workbook: XLWorkbook) =

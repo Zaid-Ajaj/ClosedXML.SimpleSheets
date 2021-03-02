@@ -178,9 +178,7 @@ let websites = [
 
 let excelFile = Excel.createFrom(websites, [
     // named link
-    Excel.field(fun website -> website.name)
-        .hyperlink(fun website -> Uri(website.address))
-
+    Excel.field(fun website -> website.name).hyperlink(fun website -> Uri(website.address))
     // full link
     Excel.field(fun website -> Uri(website.address))
 ])
@@ -214,6 +212,15 @@ let excelFile = Excel.createFrom(users, [
 
 System.File.IO.WriteAllBytes("Alignments.xlsx", excelFile)
 ```
+Alternatively, you can just say
+```fs
+Excel.field(fun user -> user.Name)
+    .header("Name")
+    .headerCentered()
+    .centered()
+```
+Which will have the same effect. These are short-hand functions
+
 ### Working with Images
 You can map fields into images using the `XLImage` type which can be constructed using the contents of an image as `byte[]` and its format:
 ```fs
