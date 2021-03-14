@@ -41,11 +41,7 @@ let rnd = System.Random()
 type Charts() =
     static member line(data: float seq) =
         let chart = LineChart()
-        chart.Entries <- [
-            for i in data -> ChartEntry(float32(i))
-        ]
-
-        chart.IsAnimated <- false
+        chart.Entries <- [ for i in data -> ChartEntry(float32(i)) ]
         chart.PointSize <- 0.0f
         chart.LineSize <- 1.0f
         chart.MinValue <- 0.0f
@@ -55,19 +51,19 @@ type Charts() =
     static member bar(data: float seq) =
         let chart = BarChart()
         chart.Entries <- [
-            for i in data do
-                let entry = ChartEntry(float32(i))
+            for (index, value) in Seq.indexed data do
+                let entry = ChartEntry(float32(value))
                 entry
         ]
-
-        chart.IsAnimated <- false
         chart.MinValue <- 0.0f
         chart.MaxValue <- 100.0f
+        chart.Margin <- 20.0f
         chart
 
     static member createImage(chart: Chart, width:int, height:int) =
-        use bitmap = new SkiaSharp.SKBitmap(width, height)
-        use canvas = new SkiaSharp.SKCanvas(bitmap)
+        chart.IsAnimated <- false
+        use bitmap = new SKBitmap(width, height)
+        use canvas = new SKCanvas(bitmap)
         chart.DrawContent(canvas, width, height)
         canvas.Save() |> ignore
         use image = SKImage.FromPixels(bitmap.PeekPixels())
@@ -146,9 +142,7 @@ let createFullExample() : byte[] =
     ]
 
     Excel.populate(sheetWithLinks, websites, [
-        Excel.field(fun website -> website.name)
-            .hyperlink(fun website -> Uri(website.address))
-
+        Excel.field(fun website -> website.name).hyperlink(fun website -> Uri(website.address))
         Excel.field(fun website -> Uri(website.address))
     ])
 
