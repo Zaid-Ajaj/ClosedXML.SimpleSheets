@@ -54,6 +54,23 @@ System.IO.File.WriteAllBytes("Users.xlsx", excelFile)
 
 ![png](docs/simple-with-headers.png)
 
+### Improved type-inference of the fields
+
+Most of the time when using the `Excel.field(...)` function, the underlying types of the lambda will be properly inferred. However, there are cases where there are many types _opened_ in the scope that hinders type inference and you would have to help the compiler by writing the types yourself:
+```fs
+let excelFile = Excel.createFrom(users, [
+    Excel.field(fun (user: User) -> user.Name).header("Name")
+    Excel.field(fun (user: User) -> user.Age).header("Age")
+])
+```
+To improve the situation, this library adds _extension methods_ that allow you **omit** the types from the lambda as follows:
+```fs
+let excelFile = Excel.createFrom(users, [
+    users.excelField(fun user -> user.Name).header("Name")
+    users.excelField(fun user -> user.Age).header("Age")
+])
+```
+
 ### Customize header cells
 ```fs
 open ClosedXML

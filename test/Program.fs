@@ -98,6 +98,16 @@ let createFullExample() : byte[] =
         Excel.field(fun user -> user.StartedJob).adjustToContents()
     ])
 
+    let inferredFields = workbook.AddWorksheet("Inferred Fields")
+    Excel.populate(inferredFields, users, [
+        users.excelField(fun user -> user.Name)
+        users.excelField(fun user -> user.Age)
+        users.excelField(fun user -> user.Working)
+        users.excelField(fun user -> user.LastName)
+        users.excelField(fun user -> user.DateOfBirth).adjustToContents()
+        users.excelField(fun user -> user.StartedJob).adjustToContents()
+    ])
+
     let fieldsWithHeaders = workbook.AddWorksheet("Added Headers")
     Excel.populate(fieldsWithHeaders, users, [
         Excel.field(fun user -> user.Name).header("Name")

@@ -13,6 +13,8 @@ type XLImage(content: byte[], format: XLPictureFormat) =
 
     new (content: byte[]) = XLImage(content, XLPictureFormat.Png)
 
+
+
 type FieldMap<'T> =
     {
         CellTransformers : ('T -> IXLCell -> IXLCell) list
@@ -430,3 +432,29 @@ type Excel() =
         Excel.createFrom("Sheet1", data, fields)
 
     static member contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
+
+[<AutoOpen>]
+module Extenstions =
+    type System.Collections.Generic.IEnumerable<'T> with
+        member inline data.excelField(map: 'T -> string) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> string option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> bool) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> bool option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> int) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> int option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> double) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> double option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> decimal) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> decimal option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> DateTime) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> DateTime option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> DateTimeOffset) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> DateTimeOffset option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> int64) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> int64 option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> Guid) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> Guid option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> Uri) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> Uri option) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> XLImage) : FieldMap<'T> = Excel.field(map)
+        member inline data.excelField(map: 'T -> XLImage option) : FieldMap<'T> = Excel.field(map)
