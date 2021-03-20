@@ -44,8 +44,7 @@ type Charts() =
         chart.Entries <- [ for i in data -> ChartEntry(float32(i)) ]
         chart.PointSize <- 0.0f
         chart.LineSize <- 1.0f
-        chart.MinValue <- 0.0f
-        chart.MaxValue <- 100.0f
+        chart.Margin <- 20.0f
         chart
 
     static member bar(data: float seq) =
@@ -55,8 +54,6 @@ type Charts() =
                 let entry = ChartEntry(float32(value))
                 entry
         ]
-        chart.MinValue <- 0.0f
-        chart.MaxValue <- 100.0f
         chart.Margin <- 20.0f
         chart
 
@@ -179,8 +176,8 @@ let createFullExample() : byte[] =
             )
             .header("Year overview")
             .headerHorizontalAlignment(XLAlignmentHorizontalValues.Center)
-            .columnWidth(40)
-            .rowHeight(60)
+            .columnWidth(50)
+            .rowHeight(80)
     ])
 
     Excel.createFrom(workbook)
