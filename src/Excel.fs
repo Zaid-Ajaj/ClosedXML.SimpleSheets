@@ -176,7 +176,7 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> Uri) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Hyperlink <- XLHyperlink(link row)
+                cell.SetHyperlink(XLHyperlink(link row))
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
@@ -184,7 +184,7 @@ type FieldMap<'T> =
             let transformer (row: 'T) (cell: IXLCell) =
                 match link row with
                 | Some uri ->
-                    cell.Hyperlink <- XLHyperlink(uri)
+                    cell.SetHyperlink(XLHyperlink(uri))
                     cell
                 | None ->
                     cell
@@ -193,7 +193,7 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> XLHyperlink) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Hyperlink <- link row
+                cell.SetHyperlink(link row)
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
@@ -201,7 +201,7 @@ type FieldMap<'T> =
             let transformer (row: 'T) (cell: IXLCell) =
                 match link row with
                 | Some hyperlink ->
-                    cell.Hyperlink <- hyperlink
+                    cell.SetHyperlink(hyperlink)
                     cell
                 | None ->
                     cell
@@ -302,14 +302,14 @@ type Excel() =
 
     static member field<'T>(map: 'T -> Uri) = FieldMap<'T>.create(fun row cell ->
         let uri = map row
-        cell.Hyperlink <- XLHyperlink(uri)
+        cell.SetHyperlink(XLHyperlink(uri))
         cell.SetValue(uri.ToString())
     )
 
     static member field<'T>(map: 'T -> Uri option) = FieldMap<'T>.create(fun row cell ->
         match map row with
         | Some uri ->
-            cell.Hyperlink <- XLHyperlink(uri)
+            cell.SetHyperlink(XLHyperlink(uri))
             cell.SetValue(uri.ToString())
         | None ->
             cell
