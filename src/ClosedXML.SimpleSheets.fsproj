@@ -12,13 +12,19 @@
     <PackageReleaseNotes>Improved type-inference through the use of extension methods</PackageReleaseNotes>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <NuGetAudit>true</NuGetAudit>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="Excel.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.95.4" />
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+    <PackageReference Include="ClosedXML" Version="0.102.3" />
+    <PackageReference Update="FSharp.Core" Version="6.0.7" />
   </ItemGroup>
 
 </Project>

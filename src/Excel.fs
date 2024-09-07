@@ -162,7 +162,6 @@ type FieldMap<'T> =
 
         member self.dateFormat(format: string) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.DataType <- XLDataType.DateTime
                 cell.Style.DateFormat.Format <- format
                 cell
 
@@ -176,7 +175,7 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> Uri) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Hyperlink <- XLHyperlink(link row)
+                cell.SetHyperlink(XLHyperlink(link row))
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
@@ -184,7 +183,7 @@ type FieldMap<'T> =
             let transformer (row: 'T) (cell: IXLCell) =
                 match link row with
                 | Some uri ->
-                    cell.Hyperlink <- XLHyperlink(uri)
+                    cell.SetHyperlink(XLHyperlink(uri))
                     cell
                 | None ->
                     cell
@@ -193,7 +192,7 @@ type FieldMap<'T> =
 
         member self.hyperlink(link: 'T -> XLHyperlink) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Hyperlink <- link row
+                cell.SetHyperlink(link row)
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
@@ -201,7 +200,7 @@ type FieldMap<'T> =
             let transformer (row: 'T) (cell: IXLCell) =
                 match link row with
                 | Some hyperlink ->
-                    cell.Hyperlink <- hyperlink
+                    cell.SetHyperlink(hyperlink)
                     cell
                 | None ->
                     cell
@@ -279,10 +278,18 @@ type Excel() =
     static member field<'T>(map: 'T -> DateTime) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
     static member field<'T>(map: 'T -> bool) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
     static member field<'T>(map: 'T -> double) = FieldMap<'T>.create(fun row cell -> cell.SetValue(map row))
-    static member field<'T>(map: 'T -> int option) = FieldMap<'T>.create(fun row cell -> cell.SetValue(Option.toNullable (map row)))
-    static member field<'T>(map: 'T -> DateTime option) = FieldMap<'T>.create(fun row cell -> cell.SetValue(Option.toNullable (map row)))
-    static member field<'T>(map: 'T -> bool option) = FieldMap<'T>.create(fun row cell -> cell.SetValue(Option.toNullable (map row)))
-    static member field<'T>(map: 'T -> double option) = FieldMap<'T>.create(fun row cell -> cell.SetValue(Option.toNullable (map row)))
+    static member field<'T>(map: 'T -> int option) = FieldMap<'T>.create(fun row cell -> 
+        let value= Option.toNullable (map row)
+        cell.SetValue(value))
+    static member field<'T>(map: 'T -> DateTime option) = FieldMap<'T>.create(fun row cell -> 
+        let value = Option.toNullable (map row)
+        cell.SetValue(value))
+    static member field<'T>(map: 'T -> bool option) = FieldMap<'T>.create(fun row cell -> 
+        let value = Option.toNullable (map row) 
+        cell.SetValue(XLCellValue.FromObject(value)))
+    static member field<'T>(map: 'T -> double option) = FieldMap<'T>.create(fun row cell -> 
+        let value = Option.toNullable (map row)
+        cell.SetValue(value))
     static member field<'T>(map: 'T -> string option) = FieldMap<'T>.create(fun row cell ->
         match map row with
         | None -> cell
@@ -302,14 +309,14 @@ type Excel() =
 
     static member field<'T>(map: 'T -> Uri) = FieldMap<'T>.create(fun row cell ->
         let uri = map row
-        cell.Hyperlink <- XLHyperlink(uri)
+        cell.SetHyperlink(XLHyperlink(uri))
         cell.SetValue(uri.ToString())
     )
 
     static member field<'T>(map: 'T -> Uri option) = FieldMap<'T>.create(fun row cell ->
         match map row with
         | Some uri ->
-            cell.Hyperlink <- XLHyperlink(uri)
+            cell.SetHyperlink(XLHyperlink(uri))
             cell.SetValue(uri.ToString())
         | None ->
             cell
@@ -334,7 +341,9 @@ type Excel() =
     static member field<'T>(map: 'T -> int64 option) = FieldMap<'T>.create(fun row cell ->
         match map row with
         | None -> cell
-        | Some value -> cell.SetValue(Convert.ToDouble(value))
+        | Some value -> 
+            let valueAsDouble = Convert.ToDouble(value)
+            cell.SetValue(valueAsDouble)
     )
 
     static member field<'T>(map: 'T -> Guid) = FieldMap<'T>.create(fun row cell ->
@@ -434,7 +443,7 @@ type Excel() =
     static member contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"
 
 [<AutoOpen>]
-module Extenstions =
+module Extensions =
     type System.Collections.Generic.IEnumerable<'T> with
         member inline data.excelField(map: 'T -> string) : FieldMap<'T> = Excel.field(map)
         member inline data.excelField(map: 'T -> string option) : FieldMap<'T> = Excel.field(map)

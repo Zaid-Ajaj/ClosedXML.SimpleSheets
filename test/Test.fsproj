@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp6.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,7 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microcharts" Version="0.9.5.9" />
     <ProjectReference Include="..\src\ClosedXML.SimpleSheets.fsproj" />
-    <PackageReference Update="FSharp.Core" Version="4.7.2" />
+    <PackageReference Update="FSharp.Core" Version="6.0.7" />
   </ItemGroup>
 
 </Project>
