@@ -126,7 +126,7 @@ type FieldMap<'T> =
 
         member self.italic(italic: 'T -> bool) =
             let transformer (row: 'T) (cell: IXLCell) =
-                cell.Style.Font.Bold <- italic row
+                cell.Style.Font.Italic <- italic row
                 cell
             { self with CellTransformers = List.append self.CellTransformers [transformer] }
 
@@ -390,7 +390,11 @@ type Excel() =
         if headersAvailable then
             for (headerIndex, headerTransformers) in List.indexed headerTransformerGroups do
                 let activeHeaderCell = sheet.Row(1).Cell(headerIndex + 1)
-                for header in headerTransformers do ignore (header activeHeaderCell)
+                for header in headerTransformers do
+                    ignore (header activeHeaderCell)
+
+        let columnsToAdjust = System.Collections.Generic.HashSet<int>()
+        let rowsToAdjust = System.Collections.Generic.HashSet<int>()
 
         for (rowIndex, row) in Seq.indexed data do
             let startRowIndex = if headersAvailable then 2 else 1
@@ -400,26 +404,29 @@ type Excel() =
                 for transformer in field.CellTransformers do
                     ignore (transformer row activeCell)
 
-                if field.AdjustToContents then
-                    let currentColumn = activeCell.WorksheetColumn()
-                    currentColumn.AdjustToContents() |> ignore
-                    activeRow.AdjustToContents() |> ignore
-
                 match field.ColumnWidth with
                 | Some givenWidth ->
-                    let currentColumn = activeCell.WorksheetColumn()
-                    currentColumn.Width <- givenWidth
+                    activeCell.WorksheetColumn().Width <- givenWidth
+                | None when field.AdjustToContents ->
+                    columnsToAdjust.Add(fieldIndex + 1) |> ignore
                 | None -> ()
 
                 match field.RowHeight with
                 | Some givenHeightFn ->
                     match givenHeightFn row with
-                    | Some givenHeight ->
-                        activeRow.Height <- givenHeight
-                    | None ->
-                        ()
-                | None ->
-                    ()
+                    | Some givenHeight -> activeRow.Height <- givenHeight
+                    | None when field.AdjustToContents ->
+                        rowsToAdjust.Add(rowIndex + startRowIndex) |> ignore
+                    | None -> ()
+                | None when field.AdjustToContents ->
+                    rowsToAdjust.Add(rowIndex + startRowIndex) |> ignore
+                | None -> ()
+
+        for colIndex in columnsToAdjust do
+            sheet.Column(colIndex).AdjustToContents() |> ignore
+
+        for rowIndex in rowsToAdjust do
+            sheet.Row(rowIndex).AdjustToContents() |> ignore
 
     static member workbookToBytes(workbook: XLWorkbook) =
         use memoryStream = new MemoryStream()
